@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  static-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python3 scripts/i2s_role_lint.py
+      - run: python3 scripts/asr_routing_lint.py
+      - run: python3 scripts/dualstream_lint.py
+      - run: python3 scripts/publication_gate.py
+      - run: python3 scripts/check_docs.py
+      - run: python3 -m unittest discover -s tests
+      - run: ./tests/host/run_red_tests.sh
+      - run: ./tests/host/run_rtp_sequence_tests.sh
+      - run: ./tests/host/run_decode_ladder_tests.sh
+      - run: ./tests/host/run_prebuffer_tests.sh
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  esp-idf-build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dual_stream: ["0", "1"]
+        adaptive_prebuffer: ["0", "1"]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build with ESP-IDF 5.5.4 (dual_stream=${{ matrix.dual_stream }}, adaptive=${{ matrix.adaptive_prebuffer }})
+        run: |
+          docker run --rm \
+            -v "$PWD:/project" -w /project \
+            -e WIFI_SSID=example-network \
+            -e WIFI_PASSWORD=example-password \
+            -e PIPECAT_SMALLWEBRTC_URL=https://example.com/api/offer \
+            -e PIPECAT_SATELLITE_ID=ci-satellite \
+            -e PIPECAT_MDNS_HOSTNAME=ci-satellite-xvf3800 \
+            -e 'PIPECAT_MDNS_INSTANCE=CI XVF3800 Voice Satellite' \
+            -e PIPECAT_ADAPTIVE_PREBUFFER=${{ matrix.adaptive_prebuffer }} \
+            -e PIPECAT_GAP_RESUME_MS=750 \
+            -e PIPECAT_DUAL_STREAM=${{ matrix.dual_stream }} \
+            espressif/idf:v5.5.4 \
+            bash -lc 'idf.py set-target esp32s3 && idf.py reconfigure && python3 scripts/verify_build_config.py && idf.py build'

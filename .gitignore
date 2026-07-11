@@ -1,0 +1,29 @@
+# Secrets and local device identity
+.env
+.env.*
+!.env.example
+devices.json
+
+# ESP-IDF output and generated config
+build/
+build-*/
+sdkconfig
+sdkconfig.old
+managed_components/
+dependencies.lock.tmp
+
+# Firmware and device backups
+*.bin
+*.elf
+*.map
+*.uf2
+backups/
+
+# Python/editor caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.cache/
+.DS_Store
+.vscode/
+.idea/
