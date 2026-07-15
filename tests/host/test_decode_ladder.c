@@ -92,7 +92,7 @@ static void test_red_plan_partial_gap_composes_chronologically(void) {
   parsed.blocks[1].ts_offset = 960;
   parsed.blocks[1].length = 1;
 
-  int8_t actions[3] = {0};
+  int8_t actions[RED_MAX_GAP] = {0};
   assert(red_recover_plan(&parsed, 3, 960, actions) == 3);
   assert(actions[0] == -1);
   assert(actions[1] == 0);
