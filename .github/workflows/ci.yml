@@ -52,4 +52,4 @@ jobs:
             -e PIPECAT_GAP_RESUME_MS=750 \
             -e PIPECAT_DUAL_STREAM=${{ matrix.dual_stream }} \
             espressif/idf:v5.5.4 \
-            bash -lc 'idf.py set-target esp32s3 && idf.py reconfigure && python3 scripts/verify_build_config.py && idf.py build'
+            bash -lc 'git config --global --add safe.directory /project && idf.py set-target esp32s3 && idf.py reconfigure && python3 scripts/verify_build_config.py && idf.py build'

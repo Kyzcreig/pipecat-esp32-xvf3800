@@ -395,8 +395,15 @@ void peer_connection_set_remote_description(PeerConnection* pc, const char* sdp,
 
     if (strncmp(buf, "a=fingerprint:sha-256 ", strlen("a=fingerprint:sha-256 ")) == 0) {
       const char* fingerprint = buf + strlen("a=fingerprint:sha-256 ");
-      snprintf(pc->dtls_srtp.remote_fingerprint,
-               sizeof(pc->dtls_srtp.remote_fingerprint), "%s", fingerprint);
+      size_t fingerprint_len = strlen(fingerprint);
+      memset(pc->dtls_srtp.remote_fingerprint, 0,
+             sizeof(pc->dtls_srtp.remote_fingerprint));
+      if (fingerprint_len >= sizeof(pc->dtls_srtp.remote_fingerprint)) {
+        LOGW("Ignoring oversized DTLS fingerprint (%zu bytes)", fingerprint_len);
+      } else {
+        memcpy(pc->dtls_srtp.remote_fingerprint, fingerprint,
+               fingerprint_len + 1);
+      }
     }
 
     if (strstr(buf, "a=ice-ufrag") &&
