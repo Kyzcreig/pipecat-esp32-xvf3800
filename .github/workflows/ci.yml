@@ -1,11 +1,10 @@
 name: CI
 
+# path-filter-exempt: static-contracts runs check_docs.py + publication_gate.py over every *.md, so docs-only commits must run it.
 on:
   push:
-    paths-ignore: ['**.md', 'docs/**']  # fleet R14 (t_e47ee8bf): skip commits that cannot change the result
     branches: [main]
   pull_request:
-    paths-ignore: ['**.md', 'docs/**']  # fleet R14 (t_e47ee8bf): skip commits that cannot change the result
 
 permissions:
   contents: read
@@ -15,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # gitleaks-action scans <sha>^..<sha> on pull_request; depth 1 has no parent
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
